@@ -1,5 +1,3 @@
-# grgates.pyx
-
 cdef class GRgates:
     # AND
     cpdef int gate_and(self, int a, int b):

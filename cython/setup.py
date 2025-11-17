@@ -8,33 +8,33 @@ from Cython.Build import cythonize
 # Detectar sistema operativo y carpeta de destino
 if sys.platform.startswith("darwin"):
     target_dir = os.path.abspath("../cybitx/Mac")
+    so_ext = ".so"
 elif sys.platform.startswith("win"):
     target_dir = os.path.abspath("../cybitx/Windows")
+    so_ext = ".pyd"
 elif sys.platform.startswith("linux"):
     target_dir = os.path.abspath("../cybitx/Linux")
+    so_ext = ".so"
 else:
     target_dir = os.path.abspath("../cybitx/Other")
+    so_ext = ".so"
 
 os.makedirs(target_dir, exist_ok=True)
 
-# Compilar el .pyx directamente en target_dir
-setup(
-    name="GRgates",
-    ext_modules=cythonize(
-        "grgates.pyx",
-        compiler_directives={'language_level': "3"},
-    ),
-    script_args=["build_ext", f"--build-lib={target_dir}", "--inplace"]
-)
+# Compilar módulos
+for module in ["full_adder.pyx", "grgates.pyx"]:
+    setup(
+        name=os.path.splitext(module)[0],
+        ext_modules=cythonize(module, compiler_directives={'language_level': "3"}),
+        script_args=["build_ext", f"--build-lib={target_dir}", "--inplace"]
+    )
 
-# Limpiar archivos temporales que crea Cython
-temp_dirs = ["build", "grgates.c", "grgates.html","grgates.cpython-313-darwin.so"]
-for d in temp_dirs:
-    path = os.path.join(os.getcwd(), d)
-    if os.path.exists(path):
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-        else:
-            os.remove(path)
+# Limpiar archivos temporales generados por Cython
+for file in os.listdir(os.getcwd()):
+    if file.endswith((".c", ".html", so_ext)):
+        os.remove(file)
+
+if os.path.exists("build"):
+    shutil.rmtree("build")
 
 print(f"GRgates compilado correctamente en {target_dir}")
